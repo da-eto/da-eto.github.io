@@ -1,4 +1,10 @@
 # Dependencies
+gems:
+    - jekyll-mentions
+#    - jemoji
+    - jekyll-redirect-from
+    - jekyll-sitemap
+
 markdown:       redcarpet
 redcarpet:
     extensions: ["no_intra_emphasis", "fenced_code_blocks", "autolink", "tables", "with_toc_data", "strikethrough"]
@@ -16,8 +22,8 @@ description:    'Упражнения в программировании и м�
 url:            http://da-eto-ya.github.io
 
 author:
-  name:         'Ilya Pleshakov'
-  url:          http://da-eto-ya.github.io
+    name:       'Ilya Pleshakov'
+    url:        http://da-eto-ya.github.io
 
 defaults:
     -
