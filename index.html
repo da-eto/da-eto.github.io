@@ -12,9 +12,18 @@ title: Home
       </a>
     </h1>
 
-    <span class="post-date">{{ post.date | date_to_string }}</span>
+    {% if post.date %}
+    <time class="post-date" datetime="{{ post.date | date_to_xmlschema }}">
+      {{ post.date | date_to_string }}
+    </time>
+    {% endif %}
 
-    {{ post.content }}
+    {% if post.excerpt != post.content %}
+        {{ post.excerpt }}
+        <p><a href="{{ post.url }}">Почитать дальше</a></p>
+    {% else %}
+        {{ post.content }}
+    {% endif %}
   </div>
   {% endfor %}
 </div>
