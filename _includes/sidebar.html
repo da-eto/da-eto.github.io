@@ -3,8 +3,8 @@
     <div class="sidebar-about">
         <h1><a href="/">{{ site.title }}</a></h1>
         <p class="lead">
-            Заметки обо всём
-            <nobr>от <a href="https://github.com/da-eto-ya"><i class="fa fa-github"></i>&nbsp;da-eto-ya</a></nobr>
+            Beata stultica
+            <nobr><a href="https://github.com/da-eto-ya"><i class="fa fa-github"></i>&nbsp;da-eto-ya</a></nobr>
         </p>
     </div>
 
@@ -20,12 +20,10 @@
 
       {% assign pages_list = site.pages %}
       {% for node in pages_list %}
-        {% if node.title != null %}
-          {% if node.layout == "page" %}
-            <li class="sidebar-nav-item{% if page.url == node.url %} active{% endif %}">
-              <a href="{{ node.url }}">{{ node.title }}</a>
-            </li>
-          {% endif %}
+        {% if node.layout == "page" and node.title != null and node.permalink != '/404.html' %}
+          <li class="sidebar-nav-item{% if page.url == node.url %} active{% endif %}">
+            <a href="{{ node.url }}">{{ node.title }}</a>
+          </li>
         {% endif %}
       {% endfor %}
     </ul>

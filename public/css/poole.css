@@ -81,6 +81,7 @@ a:focus {
 /* Headings */
 h1, h2, h3, h4, h5, h6 {
   margin-bottom: .5rem;
+  font-family: "PT Serif", serif;
   font-weight: bold;
   line-height: 1.25;
   color: #313131;
@@ -235,6 +236,7 @@ tbody tr:nth-child(odd) th {
 .lead {
   font-size: 1.25rem;
   font-weight: 300;
+  text-rendering: optimizeLegibility;
 }
 
 
@@ -324,6 +326,7 @@ tbody tr:nth-child(odd) th {
   margin-top: -.5rem;
   margin-bottom: 1rem;
   color: #9a9a9a;
+  text-rendering: optimizeLegibility;
 }
 
 /* Related posts */
@@ -333,22 +336,21 @@ tbody tr:nth-child(odd) th {
   border-top: 1px solid #eee;
 }
 .related-posts {
-  padding-left: 0;
-  list-style: none;
 }
-.related-posts h3 {
-  margin-top: 0;
-}
-.related-posts li small {
-  font-size: 75%;
+.related-posts li .date {
+  font-size: 0.75em;
   color: #999;
+  text-rendering: optimizeLegibility;
 }
 .related-posts li a:hover {
   color: #268bd2;
   text-decoration: none;
 }
-.related-posts li a:hover small {
-  color: inherit;
+.related-posts li a:hover .caption {
+  text-decoration: underline;
+}
+.related-posts li a:hover .date {
+  text-decoration: none;
 }
 
 
@@ -401,4 +403,19 @@ a.pagination-item:hover {
     border-top-right-radius:    4px;
     border-bottom-right-radius: 4px;
   }
+}
+
+span.clarify {
+  cursor: help;
+  position: relative;
+}
+span.clarify::after {
+  border-bottom: 1px dashed #999;
+  bottom: 0.15em;
+  content: '';
+  height: 0;
+  left: 0;
+  position: absolute;
+  right: 0;
+  z-index: -1;
 }

@@ -1,8 +1,8 @@
 # Dependencies
 gems:
-    - jekyll-mentions
+#    - jekyll-mentions
 #    - jemoji
-    - jekyll-redirect-from
+#    - jekyll-redirect-from
     - jekyll-sitemap
 
 markdown:       redcarpet
@@ -12,13 +12,13 @@ redcarpet:
 highlighter:    false
 
 # Permalinks & pagination
-permalink:      "/:categories/:year-:month-:day-:title.html"
+permalink:      "/:year-:month-:day-:title.html"
 paginate:       5
 
 # Setup
 title:          'Da-eto'
-tagline:        'Упражнения в программировании и мысли вслух'
-description:    'Упражнения в программировании и мысли вслух от <a href="https://github.com/da-eto-ya"><i class="fa fa-github"></i>&nbsp;da-eto-ya</a>'
+tagline:        'Beata stultica'
+description:    'Beata stultica (da-eto)'
 url:            http://da-eto-ya.github.io
 
 author:
