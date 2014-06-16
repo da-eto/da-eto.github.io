@@ -49,6 +49,8 @@ title: Контроль типа — это важно
 Посмотрим на возможное нарушение Принципа подстановки Лисков:
 
 ```php
+<?php
+// ..
 class UserRepository extends \Doctrine\ORM\EntityRepository
 {
     public function findActiveUsers()
@@ -57,9 +59,7 @@ class UserRepository extends \Doctrine\ORM\EntityRepository
         return $activeUserCollection;
     }
 }
-
 // ..
-
 public function notifyActiveUsers(EntityRepository $repo)
 {
     if ($repo instanceof UserRepository) {
@@ -76,6 +76,8 @@ public function notifyActiveUsers(EntityRepository $repo)
 Это ломает LSP и ведёт к нечитаемой модели. Хуже того, ситуация может быть следующей:
 
 ```php
+<?php
+// ..
 public function notifyActiveUsers(EntityRepository $repo)
 {
     $usersCollection = $repo->findActiveUsers();
