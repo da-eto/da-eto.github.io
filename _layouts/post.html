@@ -6,11 +6,15 @@ layout: default
   <h1 class="post-title">{{ page.title }}</h1>
 
   <time class="post-date" datetime="{{ page.date | date_to_xmlschema }}">
-      {{ page.date | date_to_string }}
+    {{ page.date | date_to_string }}
   </time>
 
   {{ content }}
 </div>
+
+{% if page.comments %}
+    {% include disqus.html %}
+{% endif %}
 
 <div class="related">
   <h3>Addendum</h3>
