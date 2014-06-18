@@ -12,7 +12,7 @@ redcarpet:
 highlighter:    false
 
 # Permalinks & pagination
-permalink:      "/:year/:month/:title.html"
+permalink:      "/:year-:month-:day/:title.html"
 paginate:       5
 
 # Setup
@@ -32,13 +32,6 @@ defaults:
             type:   "post"
         values:
             author: "Ilya Pleshakov"
-            comments: true
-    -
-        scope:
-            path:   ""
-            type:   "page"
-        values:
-            comments: false
 
 # Custom vars
 
