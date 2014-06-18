@@ -19,11 +19,12 @@ paginate:       5
 title:          'Da-eto'
 tagline:        'Beata stultica'
 description:    'Beata stultica (da-eto)'
-url:            http://da-eto-ya.github.io
+url:            https://da-eto-ya.github.io
+enforce_ssl:    da-eto-ya.github.io
 
 author:
     name:       'Ilya Pleshakov'
-    url:        http://da-eto-ya.github.io
+    url:        https://da-eto-ya.github.io
 
 defaults:
     -

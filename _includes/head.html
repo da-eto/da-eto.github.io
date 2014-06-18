@@ -2,6 +2,16 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
+    {% if site.enforce_ssl %}
+    <!-- redirect users to the https version of the website -->
+        <script type="text/javascript">
+            var enforce = "{{ site.enforce_ssl }}";
+            if ((enforce == window.location.host) && (window.location.protocol != "https:")) {
+                window.location.protocol = "https";
+            }
+        </script>
+    {% endif %}
+
     <!-- Enable responsiveness on mobile devices-->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
 
