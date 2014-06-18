@@ -12,7 +12,7 @@ redcarpet:
 highlighter:    false
 
 # Permalinks & pagination
-permalink:      "/:year-:month-:day-:title.html"
+permalink:      "/:year/:month/:title.html"
 paginate:       5
 
 # Setup
