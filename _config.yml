@@ -7,32 +7,31 @@ gems:
 
 markdown:       redcarpet
 redcarpet:
-    extensions: ["no_intra_emphasis", "fenced_code_blocks", "autolink", "tables", "with_toc_data", "strikethrough"]
+    extensions: 
+        - no_intra_emphasis
+        - fenced_code_blocks
+        - autolink
+        - tables
+        - with_toc_data
+        - strikethrough
+        - space_after_headers
+        - superscript
+        - underline
 
+pygments:       false
 highlighter:    false
 
 # Permalinks & pagination
-permalink:      "/:year/:month/:day/:title/"
+permalink:      date
 paginate:       5
 
 # Setup
 title:          'Da-eto'
 tagline:        'Beata stultica'
-description:    'Beata stultica (da-eto)'
 url:            https://da-eto-ya.github.io
 enforce_ssl:    da-eto-ya.github.io
 
 author:
     name:       'Ilya Pleshakov'
-    url:        https://da-eto-ya.github.io
-
-defaults:
-    -
-        scope:
-            path:   ""
-            type:   "post"
-        values:
-            author: "Ilya Pleshakov"
-
-# Custom vars
+    email:      'da-eto@ya.ru'
 
