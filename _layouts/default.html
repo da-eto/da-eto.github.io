@@ -4,7 +4,11 @@
 <body>
 {% include sidebar.html %}
 
-<div class="content container">{{ content }}</div>
+<div class="content container">
+    {{ content }}
+<hr>
+{% include orphus.html %}
+</div>
 
 {% include foot.html %}
 </body>
