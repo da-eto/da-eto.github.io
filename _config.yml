@@ -16,7 +16,7 @@ redcarpet:
         - strikethrough
         - space_after_headers
         - superscript
-        - underline
+#        - underline
 
 pygments:       false
 highlighter:    false
