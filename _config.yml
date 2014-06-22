@@ -28,8 +28,9 @@ paginate:       5
 # Setup
 title:          'Da-eto'
 tagline:        'Beata stultica'
-url:            https://da-eto-ya.github.io
-enforce_ssl:    da-eto-ya.github.io
+url:            http://da-eto.info
+#enforce_ssl:    da-eto.info
+enforce_ssl:    false
 
 author:
     name:       'Ilya Pleshakov'

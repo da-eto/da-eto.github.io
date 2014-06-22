@@ -1,4 +1,4 @@
-da-eto-ya.github.io
-===================
+da-eto.info
+===========
 
 Simple programming exercises
