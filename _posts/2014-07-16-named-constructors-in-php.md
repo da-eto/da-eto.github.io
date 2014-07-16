@@ -211,7 +211,7 @@ $customer = Customer::fromImport($name);
 Я даже могу предоставить оба варианта.
 Но по крайней мере, благодаря именованным конструкторам у нас **есть** эти варианты.
 
-## Почитать на тему:
+### Почитать на тему:
 
 - [When to Use Static Methods](/2014/06/when-to-use-static-methods-in-php/)
 - [Accessing private properties from other instances](/2011/03/accessing-private-properties-from-other-instances/)
