@@ -47,6 +47,13 @@ html {
   }
 }
 
+/*
+ * General elements styling
+ *
+ */
+pre code {
+  font-size: 95%;
+}
 
 /*
  * Sidebar
