@@ -19,7 +19,7 @@ redcarpet:
 #        - underline
 
 pygments:       false
-highlighter:    false
+highlighter:    pygments
 
 # Permalinks & pagination
 permalink:      date
