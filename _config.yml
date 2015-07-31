@@ -5,7 +5,7 @@ gems:
 #    - jekyll-redirect-from
     - jekyll-sitemap
 
-markdown:       redcarpet
+markdown: redcarpet
 redcarpet:
     extensions: 
         - no_intra_emphasis
@@ -16,6 +16,7 @@ redcarpet:
         - strikethrough
         - space_after_headers
         - superscript
+        - footnotes
 #        - underline
 
 highlighter:    null
