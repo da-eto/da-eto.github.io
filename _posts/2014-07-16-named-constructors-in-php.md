@@ -213,8 +213,8 @@ $customer = Customer::fromImport($name);
 
 ### Почитать на тему:
 
-- [When to Use Static Methods](/2014/06/when-to-use-static-methods-in-php/)
-- [Accessing private properties from other instances](/2011/03/accessing-private-properties-from-other-instances/)
-- [Casting Value Objects to String](/2013/02/casting-value-objects/)
-- [Final Classes: Open for Extension, Closed for Inheritance](/2014/05/final-classes-in-php/)
+- [When to Use Static Methods](http://verraes.net/2014/06/when-to-use-static-methods-in-php/)
+- [Accessing private properties from other instances](http://verraes.net/2011/03/accessing-private-properties-from-other-instances/)
+- [Casting Value Objects to String](http://verraes.net/2013/02/casting-value-objects/)
+- [Final Classes: Open for Extension, Closed for Inheritance](http://verraes.net/2014/05/final-classes-in-php/)
 
