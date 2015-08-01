@@ -1,17 +1,26 @@
 ---
 layout: post
-title: Rust — это когда никогда не нужно закрывать сокет
+title: Rust — это значит, что никогда не нужно закрывать сокет
 ---
 
-> Перевод статьи Yehuda Katz «[Rust Means Never Having to Close a
+> Вольный перевод статьи Yehuda Katz «[Rust Means Never Having to Close a
 > Socket](http://blog.skylight.io/rust-means-never-having-to-close-a-socket/)»
 
 One of the coolest features of Rust is how it automatically manages resources
 for you, while still guaranteeing both safety (no segfaults) and high
 performance.
 
+Одна из самых клёвых фич Rust это то, как он автоматически управляет ресурсами
+для вас, гарантируя при этом и безопасность (отсутствие сегфолтов), и высокую
+производительность.
+
+
 Because Rust is a different kind of programming language, it might be difficult
 to understand what I mean, so let me be perfectly clear:
+
+Поскольку Rust — язык программирования особого рода, то может быть сложно
+понять, что же я имею ввиду, так что позвольте выразиться предельно ясно:
+
 
 - In Rust, as in garbage collected languages, you never explicitly free memory
 - In Rust, unlike in garbage collected languages, you never [^1] explicitly
@@ -19,13 +28,28 @@ to understand what I mean, so let me be perfectly clear:
 - Rust achieves both of these features without runtime costs (garbage
   collection or reference counting), and without sacrificing safety.
 
+- В Rust, как и в языках со сборкой мусора, вы никогда в явном виде не
+  освобождаете память
+- В Rust, в отличие от языков со сборкой мусора, вы никогда в явном виде не
+  закрываете и не освобождаете ресурсы, такие, как файлы, сокеты и локи
+- Rust достигает обеих этих фич без траты ресурсов в рантайме (сборка мусора
+  или подсчёт сылок) и не жертвуя безопасностью.
+
+
 If you’ve ever leaked a socket or a file, or used an abstraction that leaked
 these resources, you know how big of a deal this is.
+
+Если вы когда-нибудь наблюдали утечки памяти при работе с сокетами или файлами
+или использовали какую-нибудь абстракцию для работы с этими ресурсами, которая
+протекала, то вы знаете, насколько это важно.
+
 
 You have probably come to expect protection against “use after free” memory
 bugs, while at the same time not thinking twice about similar bugs that can
 arise when you explicitly close sockets. I’m here to tell you that there’s a
 better way.
+
+
 
 If you’ve worked in a language with a garbage collector, you should pay close
 attention to the resource management aspect of this article. If you’ve worked
@@ -305,7 +329,7 @@ fn first_name(person: &Person) -> &str {
 }
 ```
 
-If you look at this, you can immediately see a problem. the `hello` function is
+If you look at this, you can immediately see a problem. The `hello` function is
 trying to return a borrowed `&str`, but the hello function owns the original
 `Person` that contains the bytes. As soon as `hello` returns, the `Person` no
 longer exists, so the borrowed contents (the slice) point at an invalid
@@ -534,5 +558,3 @@ required.
 occasionally end up directly managing resources. In both cases, the dominant
 programming model is that the language manages resources for you, and that’s
 what’s important.
-
-
