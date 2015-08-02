@@ -49,6 +49,10 @@ bugs, while at the same time not thinking twice about similar bugs that can
 arise when you explicitly close sockets. I’m here to tell you that there’s a
 better way.
 
+Вы, возможно, ожидаете увидеть какую-то защиту против багов с памятью
+наподобие “использования после освобождения”, ну и чтобы два раза не ходить,
+здесь же может быть про похожие баги, появляющиеся, когда вы в явном виде
+закрываете сокеты. Я здесь чтобы сказать вам, что есть лучший путь.
 
 
 If you’ve worked in a language with a garbage collector, you should pay close
@@ -56,21 +60,44 @@ attention to the resource management aspect of this article. If you’ve worked
 in a low-level language, like C or C++, you will likely find the safety aspects
 most interesting.
 
+Если вы работали с языком со сборкой мусора, то вам стоит внимательно
+рассмотреть аспект менеджмента ресурсов, освещённый в этой статье. Если вы
+работали с низкоуровневым языком, таким, как C или C++, вы, возможно,
+найдёте эти аспекты безопасности более интересными.
+
+
 > Many parts of Rust’s system were first explored in other programming
 > languages. What makes Rust interesting is putting them all together, and
 > making strict guarantees across the entire language. In practice, these
 > language-wide guarantees dramatically improve the utility of the ideas.
 
+> Многие части системы Rust были сначала изучены в других языках
+> программирования. Что делает Rust интересным, так это то, как он собрал
+> их все вместе, обеспечивая строгие гарантии во всём языке. На практике,
+> эти повсеместные в языке гарантии значительно увеличивают полезность идей.
+
+
 ## The Ownership System
+
+## Система владения
+
 
 The way that this works is through Rust’s “ownership” system. Whenever you
 create a new object, it is “owned” by the scope that created it.
 
+Вот как работает система “владения” в Rust. Каждый раз, когда вы создаёте
+новый объект, им “владеет” область видимости, которая его создала.
+
+
 Let’s take a look at an example of a function that copies an input file into a
 tempfile, processes it, and then copies the output into an output file.
 
+Давайте посмотрим пример функции, которая копирует входной файл во временный
+файл, обрабатывает его и записывает результат в выходной файл.
+
+
 ```rust
-fn process(from: &Path, to: &Path) -> IoResult<()> {  
+fn process(from: &Path, to: &Path) -> IoResult<()> {
     // creates a new tempdir with the specified suffix
     let tempdir = try!(TempDir::new("skylight"));
 
@@ -93,28 +120,77 @@ fn process(from: &Path, to: &Path) -> IoResult<()> {
 }
 ```
 
+```rust
+fn process(from: &Path, to: &Path) -> IoResult<()> {
+    // создаём новую директорию с указанным суффиксом
+    let tempdir = try!(TempDir::new("skylight"));
+
+    // открываем входной файл
+    let mut from_file = try!(File::open(from));
+
+    // создаём временный файл во временной директории
+    let mut tempfile =
+        try!(File::create(&tempdir.path().join("tmp1")));
+
+    // копируем входной файл во временный
+    try!(io::util::copy(&mut from_file, &mut tempfile));
+
+    // используем некоторую внешнюю программу для обработки временного файла на месте
+
+    // после обработки копируем временный файл в выходной файл
+    let mut out = try!(File::create(to));
+
+    io::util::copy(&mut tempfile, &mut out)
+}
+```
+
+
 In this example, the scope of the `process` function is the initial owner of
 the `TempDir` created on the first line. In this example, the `process`
 function never gave up ownership, so when the function finishes, it will
 automatically be dropped, which will delete the `Tempfile`.
 
+В этом примере область видимости функции `process` это изначальный владелец
+`TempDir`, созданного в первой строке. В этом примере функция `process`
+никогда не передаёт владение, так что когда она завершает работу, это будет
+автоматически сброшено, что удалит `Tempfile`.
+
+
 This is an example of _automatic resource management_. The `TempDir` object is
 not just a piece of memory – it represents a managed resource. As soon as the
 program stops using the resource, its cleanup logic gets invoked.
+
+Это пример __автоматического управления ресурсами__. Объект `TempDir` не просто
+кусок памяти — он представляет собой управляемый ресурс. Как только программа
+перестаёт использовать ресурс, вызывается его логика очистки.
+
 
 This is true about virtually __all__ resources in Rust. Just as automatic
 memory management relieves us from the need to free memory, automatic resource
 management relieves us from the need to close resources.
 
+Это правда фактически обо __всех__ ресурсах в Rust. Также, как автоматическое
+управление памятью освобождает нас от необходимости освобождать память,
+автоматическое управление ресурсами освобождает нас от необходимости закрывать
+ресурсы.
+
+
 > Aside: This is called “RAII” (Resource Acquisition Is Initialization) in C++,
 > which is a contender for the most confusingly named, yet useful concept in
 > programming.
+
+> Отклонение: это называется “RAII” (Resource Acquisition Is Initialization,
+> Получение ресурса есть инициализация) в C++, что является кандидатом на
+> наиболее запутанное имя, но при этом полезном концепте программирования.
+
 
 It’s interesting to me that the most successful technique for relieving
 programmers of manual memory management makes it very difficult to successfully
 and efficiently relieve programmers of manual resource management. In
 high-level languages, we never `free` memory, but we routinely `close` sockets
 and files, and `release` locks.
+
+
 
 In practice, leaking these resources is shockingly common in languages with
 garbage collectors, so I really enjoy the fact that forgetting to close sockets
