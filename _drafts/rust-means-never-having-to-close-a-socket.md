@@ -518,6 +518,9 @@ __Fundamentally, what this means is that verified ownership is part of the
 interface of your functions__. Rust people sometimes refer to this as "the
 borrow checker", but the implications are profound.
 
+__Фундаментально, это значит, что верифицированное право владения это часть
+интерфейса ваших функций__. Люди Rust иногда называют это “проверятелем
+владения”, но следствия глубокие.
 
 
 In practice, the reason this works so well is that most of the time, functions
@@ -526,6 +529,13 @@ value, and return. Holding on to the value for longer, for example by using
 threads, is both uncommon and an appropriate time to think a little bit about
 what's happening.
 
+На практике, причина, по которой это работает так хорошо, это то что чаще всего
+функции, получающие значения, “заимствуют” их. Они берут значение, проводят
+какую-то работу с ним, и возвращают. Держать значение дольше, например,
+используя потоки, и не обычно, и хороший момент, чтобы подумать немного больше
+о том, что происходит.
+
+
 The starting point when writing new functions is to borrow parameters, not try
 to take ownership. After a little while of programming with Rust, this imposes
 no cognitive cost; it's simply the default. If the compiler complains (and that
@@ -533,29 +543,64 @@ happens less and less as you internalize the rules and they become second
 nature), it means you're doing something potentially dangerous, and that's when
 you need to think about it.
 
+Начальная точка при написании функций это заимствование параметров, не пытаясь
+получить владение. После небольшого времени программирования на Rust это не
+требует умственных усилий, это просто действие по умолчанию. Если компилятор
+жалуется (и это случается реже и реже по мере того, как вы усваиваете правила
+и они становятся второй природой), то это значит, то вы делаете что-то
+потенциально опасное, и это тогда, когда вам нужно подумать об этом.
+
+
 ## Returning a Borrowed Field from a Borrowed Object
 
+## Возврат заимствованного поля из заимствованного объекта
+
+
 Earlier on, we looked at this signature:
+
+Ранее мы смотрели на эту сигнатуру:
+
 
 ```rust
 fn path(&self) -> &Path  
 ```
+
 
 This may have been bothering you. I said before that when a function borrows an
 object, it must only use the value while the function is executing, and not
 later. Doesn't returning a piece of that object self-evidently violate the
 rule?
 
+Это может беспокоить вас. Я сказал ранее, что когда функция заимствует объект,
+то она может использовать значение только во время того, когда функция
+исполняется, и не позже. Разве возврат части этого объекта самоочевидно
+не нарушает правило?
+
+
 The reason this works is that the caller of `path` obviously has the right to
 use the `Tempfile`, since it lent it as an argument. In this case, the Rust
 compiler will guarantee that the returned `Path` doesn't outlive the `Tempfile`
 that contains it.
 
+Причина, по которой это работает, это то, что вызывающий `path` очевидно
+имеет правда использовать `Tempfile`, поскольку он одолжил его как аргумент.
+В этом случае компилятор Rust будет гарантировать, что возвращаемый `Path`
+не переживёт `Tempfile`, который его содержит.
+
+
 In practice, this means that you can return borrowed contents upstream, and
 Rust will take care of keeping track of the original container that they came
 from.
 
+На практике это значит, что вы может возвращать заимствованное содержимое
+наверх, и Rust будет заботиться об отслеживании оригинального контейнера, из
+которого оно пришло.
+
+
 To illustrate, let's look at an example:
+
+Для иллюстрации давайте посмотрим на пример:
+
 
 ```rust
 fn hello() -> &str {  
@@ -574,13 +619,41 @@ fn first_name(person: &Person) -> &str {
 }
 ```
 
+```rust
+fn hello() -> &str {  
+    let person = Person {
+        first: "Yehuda".to_string(),
+        last: "Katz".to_string(),
+        age: 32
+    };
+
+    first_name(&person)
+}
+
+fn first_name(person: &Person) -> &str {  
+    // as_slice заимствует слайсовый "вид" из строки
+    person.first.as_slice()
+}
+```
+
+
 If you look at this, you can immediately see a problem. The `hello` function is
 trying to return a borrowed `&str`, but the hello function owns the original
 `Person` that contains the bytes. As soon as `hello` returns, the `Person` no
 longer exists, so the borrowed contents (the slice) point at an invalid
 location.
 
+Если вы посмотрите на это, вы немедленно увидите проблему. Функция `hello`
+пытается вернуть заимствованный `&str`, но функция `hello` владеет оригинальным
+`Person`, который содержит байты. Как только `hello` завершается, `Person`
+больше не существует, так что заимствованное содержимое (слайс) указывает
+на неверный адрес.
+
+
 If you actually try to compile this program today, you get:
+
+На самом деле, если вы попробует скомпилировать эту программу, то вы получите:
+
 
 ```
 move.rs:8:15: 8:19 error: missing lifetime specifier [E0106]  
@@ -588,25 +661,49 @@ move.rs:8 fn hello() -> &str {
                         ^~~~
 ```
 
+
 This slightly confusing error message means that we are trying to return
 borrowed bytes, but the caller of this function didn't lend us the `Person` we
 borrowed the bytes from. Rust is asking us to tell it which "lifetime" is it
 attached to, if not the caller's scope.
 
+Это слегка сбивающее с толку сообщение об ошибке значит, что мы пытаемся вернуть
+заимствованные байты, но вызыватель этой функции не одалживал `Person`, из которого
+мы заимствуем байты. Rust просит нас сказать, какое “время жизни” прикреплено к нему,
+если это не область видимости вызывающего.
+
+
 > Typically, Rust ties the scope of returned values to the scope of a borrowed
 > argument. Here, we have no borrowed arguments, so Rust is asking us to be
 > more explicit.
+
+> Обычно, Rust связывает область видимости возвращаемого аргумента с областью
+> видимости заимствованного аргумента. Здесь же у нас нет заимствованных
+> аргументов, так что Rust просит нас быть более определёнными.
+
 
 In practice, this means that a function can easily return borrowed contents
 contained in a borrowed parameter. Otherwise, you will need to find storage for
 the value that your caller has access to, or clone the value so the caller has
 its own copy that it owns.
 
+На практике это значит, что функция может легко возвращать заимствованное
+содержание, содержащееся в заимствованном параметре. Иначе вам нужно будет найти
+хранилище для значения, к которому ваш вызыватель имеет доступ, или клонировать
+значение так, чтобы вызывающий имел свою копию того, чем он владеет.
+
+
 ## Ergonomics
+
+## Эргономика
+
 
 At first glance, all of this ownership machinery feels very involved, and looks
 like it would likely have a large impact on the ergonomics of using Rust. And
 indeed, it does feel that way initially.
+
+
+
 
 But several factors make things far more usable than they appear.
 
