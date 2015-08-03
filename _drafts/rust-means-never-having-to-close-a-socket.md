@@ -702,10 +702,15 @@ At first glance, all of this ownership machinery feels very involved, and looks
 like it would likely have a large impact on the ergonomics of using Rust. And
 indeed, it does feel that way initially.
 
-
+На первый взгляд, вся эта машинерия с владением кажется очень запутанной, и
+выглядит так, что наверняка будет иметь большое влияние на удобство использования Rust.
+И, действительно, так сначала кажется.
 
 
 But several factors make things far more usable than they appear.
+
+Но некоторые факты делают вещи намного более удобным чем кажутся.
+
 
 First, a large amount of real-world code fits within the lend/borrow pattern.
 As I've written more and more Rust, I have come to realize that programs
@@ -713,19 +718,40 @@ written in Ruby follow similar patterns: functions make some objects and pass
 them to child functions to do some work, and the child functions return a new
 value.
 
+Первое, большое количество реального кода соответствует паттерну
+одалживания/заимствования. Пока я пишу всё больше и больше на Rust, я пришёл
+к выводу, что многие программы, написанные на Ruby, следуют похожим
+шаблонам: функции создают некоторые объекты и передают их дочерним функциям
+чтобы сделать некоторую работу, и дочерние функции возвращают новое значение.
+
+
 This is, of course, recursive, so it only becomes obvious when the difference
 (between getting parameters to use during the function call, and using them for
 longer) is formalized as it is in Rust. Only by making this distinction a
 function signatures across the board, and checking for mistakes, can we get the
 guarantees that Rust provides.
 
+Это, конечно, рекурсивно, так что становится очевидным, когда различие (между
+получением параметров для использования во время вызова функции и использования
+их дольше) формализовано как сделано в Rust. Только создавая это отличие
+сигнатуры функции пересекают границу и проверяются на ошибки, можем ли мы
+получить гарантии, которые Rust предоставляет.
+
+
 > In contrast, C++ makes the distinction explicit in some (but not all) cases,
 > and doesn't check for mistakes. Languages with a GC typically hide the
 > distinction between "transferred" and "lent" arguments.
 
+> В контрасте, C++ делает отличие явным в некоторых (но не всех) случаях,
+> и не проверяет на ошибки. Языки со сборкой мусора скрывают отличия между
+> “перенесенными” и “одолженными” аргументами.
+
+
 As I said above, this means that Rust programmers quickly learn to treat
 borrowing as the default when writing new functions, which alleviates a lot of
 the cognitive load of the system.
+
+
 
 Second, after using Rust for a little while, most people discover that the
 borrow checker errors are warning them about real, serious, and subtle
