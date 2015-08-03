@@ -190,6 +190,11 @@ and efficiently relieve programmers of manual resource management. In
 high-level languages, we never `free` memory, but we routinely `close` sockets
 and files, and `release` locks.
 
+Для меня интересно то, что наиболее успешная техника для избавления
+программистов от ручного управления памятью делает его очень сложным
+успешно и эффективно избавлять программистов от ручного управления ресурсами.
+В высокоуровневых языках мы никогда не освобождаем память, но мы рутинно
+закрываем сокеты и файлы и освобождаем блокировки.
 
 
 In practice, leaking these resources is shockingly common in languages with
@@ -198,8 +203,20 @@ is as much a non-issue in Rust as forgetting to free memory. And in Rust, you
 are protected from “use-after-release” bugs involving resources just as you are
 protected from “use-after-free” bugs involving memory.
 
+На практике, утечки в работе с этими ресурсами потрясающе общие в языках со
+сборкой мусора, так что я действительно радуюсь факту, что забывание закрыть
+сокеты настолько же не проблема в Rust, как и забывание освобождать память.
+И в Rust вы защищены от багов “использования после освобождения” с участием
+ресурсов, как вы и защищены от багов “использования после освобождения” с
+участием памяти.
+
+
 It sounds like magic, so you probably have a few questions about how it
 actually works.
+
+Это звучит как магия, так что вы, возможно, имеете несколько вопросов о том,
+как это на самом деле работает.
+
 
 First of all, this system relies on the fact that there can be only one owner
 at a time. How can I be sure that I didn’t make a mistake and reference the
@@ -208,8 +225,23 @@ advisory. In Rust, the scope that creates an object owns it. It can then
 transfer ownership to another scope, or retain ownership until it is finished
 executing. When a scope finishes executing, Rust destroys any objects it owns.
 
+В первую очередь, эта система полагается на факте того, что может быть только
+один владелец в каждый момент времени. Как я могу быть уверен что я не
+сделал ошибку и не сослался на `TempDir` из нескольких мест? Ответ в том, что
+система владения — это не советник. В Rust область видимости, которая создала
+объект, владеет им. После этого она может передать владение другой области
+видимости или удерживать владение пока не закончит исполняться. Когда
+область видимости заканчивает исполнение, Rust уничтожает любые объекты ею
+созданные.
+
+
 Because only one scope owns an object at a time, you can tell just by looking
 at it which objects will be destroyed when it’s done executing.
+
+Поскольку только одна область видимости владеет объектов в один момент времени,
+вы можете сказать просто смотря на неё, какие объекты будут уничтожены, когда
+она закончит исполнение.
+
 
 ```rust
 struct Person {  
@@ -246,11 +278,54 @@ fn name_size(person: Person) -> uint {
 }
 ```
 
+```rust
+struct Person {
+    first: String,
+    last: String
+}
+
+fn hello() {
+    let yehuda = Person {
+        first: "Yehuda".to_string(),
+        last: "Katz".to_string()
+    };
+
+    // `yehuda` перенесено в `name_size`, так что она больше не может
+    // использоваться в этой функции и не будет уничтожена
+    // когда функция завершится. Это дело `name_size`,
+    // или возможно будущего владельца уничтожить его
+    let size = name_size(yehuda);
+
+    let tom = Person {
+        first: "Tom".to_string(),
+        last: "Dale".to_string()
+    };
+
+    // `tom` не был перемещен, так что он будет
+    // уничтожен, когда функция завершится
+}
+
+fn name_size(person: Person) -> uint {  
+    let Person { first, last } = person;
+    first.len() + last.len()
+
+    // эта функция владее Person, так что Person будет уничтоже, когда `name_size` завершится
+}
+```
+
+
 Just by looking at each of the two functions, you can see that `yehuda` was
 transferred to `name_size` and `tom` was not. By looking at `name_size`, you
 can see that it still owns its `person` argument when it returns. Just by
 looking at the functions, you can determine exactly which objects (if any) will
 be destroyed when they finish executing.
+
+Просто смотря на каждую из этих двух функций вы можете увидеть, что
+`yehuda` был перемещён в `name_size` и `tom` не был. Смотря на `name_size` вы
+можете увидеть, что он всё ещё владеет его аргументом `person` когда он
+завершается. Просто смотря на функции вы можете определить какие объекты
+(если такие есть) будут уничтожены когда они завершат исполнение.
+
 
 But how does that explain the tempfile example? If you look at the third line
 of code in the `process` function, you can see that `tempdir.path()` is calling
@@ -259,10 +334,24 @@ and therefore have two owners? Or does it mean that we transferred ownership
 into the `path` function, which will destroy the directory immediately upon
 return? Clearly both of those answers will not do.
 
+Но как это объясняет пример со временным файлом? Если вы посмотрите на 
+третью строчку кода в функции `process`, вы можете увидеть, что `tempdir.path()`
+это вызов метода в `Tempdir`. Разве это не значит, что я создал вторую ссылку
+и таким образом имею двух владельцев? Или это значит что мы передали владение
+в функцию `path`, которая удалит директорию сразу после завершения?
+Ясно, что оба этих ответа не подходят.
+
+
 ## Borrowing and Lending
+
+## Заимствование и одалживание
+
 
 To understand what's happening here, we need to look at the signature of the
 `path` method:
+
+Чтобы понять, что здесь происходит, нам нужно посмотреть на сигнатуру
+метода `path`:
 
 ```rust
 fn path(&self) -> &Path
@@ -270,7 +359,13 @@ fn path(&self) -> &Path
 
 The way to read this is:
 
+Способ это прочитать:
+
+
 > The path method __borrows__ self and returns a __borrowed__ Path.
+
+> Метод path __заимствует__ self и возвращает __заимствованный__ Path.
+
 
 A function that _borrows_ an object does not take ownership of it, and will not
 destroy it when it returns. It can only use the object during the time that the
@@ -278,12 +373,24 @@ function is executing–it cannot, for example, spawn a thread and try to use th
 object inside the thread. To put it another way, a borrowed object must not
 outlive the scope of the function that borrowed it.
 
+Функция, которая __заимствует__ объект не получает право владения им и не будет
+уничтожать его, когда завершится. Она только можно использовать объект во время
+своего исполнения — она не может, к примеру, заспаунить поток и попытаться
+использовать объект внутри этого потока. Если по-другому, заимствованный
+объект не должен покидать область видимости функции, которая его заимствовала.
+
+
 This means that the Rust compiler can look at every function call and know at
 compile time whether the code is trying to take over ownership. Once ownership
 of an object is transferred, the original owner is banned from accessing it.
 
+Это значит, что компилятор Rust может посмотреть в любой вызов функции и знать
+во время компиляции всё, что код пытается сделать с владением. Как только
+владение объектом перемещается, изначальному владельцу запрещен доступ к нему.
+
+
 ```rust
-struct Person {  
+struct Person {
     first: String,
     last: String,
     age: uint
@@ -307,8 +414,37 @@ fn is_thirties(person: Person) {
 }
 ```
 
+```rust
+struct Person {
+    first: String,
+    last: String,
+    age: uint
+}
+
+fn hello() {
+    let person = Person {
+        first: "Yehuda".to_string(),
+        last: "Katz".to_string(),
+        age: 32
+    };
+
+    let thirties = is_thirties(person);
+    println!("{}, thirties: {}", person, thirties);
+}
+
+// Это функцию пробует завладеть `Person`; она не
+// спрашивает взаймы, используя &Person
+fn is_thirties(person: Person) {
+    person.age >= 30 && person.age < 40
+}
+```
+
 If I try to compile this program, I will get the following error (slightly
 abridged):
+
+Если я попробую скомпилировать эту программу, то я получу следующее
+сообщение об ошибке (слегка сокращённое):
+
 
 ```
 move.rs:16:34: 16:40 error: use of moved value: `person`  
@@ -320,12 +456,22 @@ move.rs:15     let thirties = is_thirties(person);
                                           ^~~~~~
 ```
 
+
 What this means is that the scope of the `hello` function was the initial owner
 of the `Person`, but when it called `is_thirties`, it transferred ownership to
 the scope of the `is_thirties` function. As the new owner, when `is_thirties`
 returns, it frees the memory occupied by the `Person`.
 
+Это значит то. что область видимости функции `hello` была изначальным владельцем
+`Person`, но когда был вызван `is_thirties`, то владение переместилось в
+область видимости функции `is_thirties`. Как новый владелец, когда `is_thirties`
+завершается, она очищает память, занятую `Person`.
+
+
 Instead you would want to write this program using borrowing and lending:
+
+Вместо этого вы можете написать эту программу, используя заимствование и одалживание:
+
 
 ```rust
 fn hello() {  
@@ -347,9 +493,32 @@ fn is_thirties(person: &Person) {
 }
 ```
 
+```rust
+fn hello() {
+    let person = Person {
+        first: "Yehuda".to_string(),
+        last: "Katz".to_string(),
+        age: 32
+    };
+
+    // одалживаем переменную person, но не передаём владение
+    let thirties = is_thirties(&person);
+
+    // сейчас эта область видимости всё ещё владеет person
+    println!("{}, thirties: {}", person, thirties);
+}
+
+fn is_thirties(person: &Person) {  
+    person.age >= 30 && person.age < 40
+}
+```
+
+
 __Fundamentally, what this means is that verified ownership is part of the
 interface of your functions__. Rust people sometimes refer to this as "the
 borrow checker", but the implications are profound.
+
+
 
 In practice, the reason this works so well is that most of the time, functions
 that take values are "borrowing" them. They take a value, do some work with the
