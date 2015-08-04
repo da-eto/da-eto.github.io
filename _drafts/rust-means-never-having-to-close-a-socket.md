@@ -23,12 +23,12 @@ to understand what I mean, so let me be perfectly clear:
 
 
 - In Rust, as in garbage collected languages, you never explicitly free memory
-- In Rust, unlike in garbage collected languages, you never [^1] explicitly
+- In Rust, unlike in garbage collected languages, you never [^0] explicitly
   close or release resources like files, sockets and locks
 - Rust achieves both of these features without runtime costs (garbage
   collection or reference counting), and without sacrificing safety.
 
-- В Rust, как и в языках со сборкой мусора, вы никогда в явном виде не
+- В Rust, как и в языках со сборкой мусора, вы никогда [^1] в явном виде не
   освобождаете память
 - В Rust, в отличие от языков со сборкой мусора, вы никогда в явном виде не
   закрываете и не освобождаете ресурсы, такие, как файлы, сокеты и локи
@@ -751,6 +751,9 @@ As I said above, this means that Rust programmers quickly learn to treat
 borrowing as the default when writing new functions, which alleviates a lot of
 the cognitive load of the system.
 
+Как я сказал ранее, это значит, что программисты на Rust быстро учатся
+трактовать заимствование как способ по умолчанию, когда пишут новые функции,
+что облегчает большую часть когнитивной нагрузки системы.
 
 
 Second, after using Rust for a little while, most people discover that the
@@ -758,14 +761,32 @@ borrow checker errors are warning them about real, serious, and subtle
 mistakes. After a while, the borrow checker naturally pushes you into
 programming patterns that are less subject to these kinds of subtle bugs.
 
+Во-вторых, после некоторого времени использования Rust большинство народа
+обнаруживает, что ошибки проверки заимствования это предупреждения им о
+реальных, серьёзных и хитрых ошибках. Спустя некоторое время проверка
+заимствования естественно подводит вас к паттернам программирования,
+которые менее подвержены этим типам хитрых ошибок.
+
+
 Third, I have personally found that a very clear understanding of the ownership
 of my objects significantly improves my ability to reason about my programs. It
 is both clarifying in general, and makes it much, much harder to introduce
 accidental memory leaks that cost huge amounts of time to track down later.
 
+В-третьих, я сам для себя нашёл, что очень ясное представление о владении
+моими объектами значительно улучшает мои способности думать о моих программах.
+Это и проясняет в общем, и делает это намного, намного сложнее вносить
+случайные утечки памяти которые стоят большого времени потом, чтобы их обнаружить.
+
+
 And finally, there are real ergonomic benefits to automatic resource management
 that both prevent resource leaks (when I'm being lazy) and extra boilerplate or
 indentation (when I'm being careful).
+
+Наконец, есть реальные эргономические выгоды от автоматического управления
+ресурсами, которое и предотвращает утечку ресурсов (когда я ленив), и лишний
+код или отступы (когда я осторожен).
+
 
 Outside of C++, very few programmers have experienced a programming environment
 where automatic resource management was the norm, and it's very, very easy to
@@ -774,18 +795,43 @@ changes enough of the traditional tradeoffs in this space that I would urge you
 to push back on the little voice in your head that's telling you "if I didn't
 need it in \, how important can it be?"
 
+Снаружи от C++, очень мало программистов испытали программную среду, где
+автоматическое управление ресурсами было нормой, и очень, очень просто включить
+“нюхательные” части мозга и предположить, что это не так уж пригодно. Rust
+меняет достаточно в традиционных компромиссах в этой области, чтобы я настоятельно
+вам советовал отодвинуть маленький голосок в вашей голове, который говорит вам
+“если мне не нужно это в чём-то, то как важно это может быть?”
+
+
 ## Reference Counting (and GC)
+
+## Подсчёт ссылок (и сборка мусора, GC)
+
 
 You may be aware that Rust has reference-counted pointers (and plans to have GC
 in the future).
 
+Вы можете знать, что Rust имеет указатели с подсчётом ссылок (и планирует
+заиметь GC в будущем).
+
+
 How does that fit into all of this?
+
+Как это соотносится со всем предыдущим?
+
 
 In my experience, once you get used to the ownership paradigm, you very rarely
 want to reach for Rc pointers. For example, the entire Cargo codebase has no
 instances of reference counted pointers, and only a single use of an atomically
 reference counted pointer (for sharing a lock between threads in the code that
 implements parallel builds).
+
+По моему опыту, как только вы начинаете использовать парадигму владения, вы
+очень редко захотите доходить до Rc-указателей (reference count, подсчёт ссылок).
+Например, во всём коде Cargo нет ни одного указателя с подсчётом ссылок и есть
+только одно использование атомарного указателя с подсчётом ссылок (для разделения
+блокировки между потоками в коде параллельной сборки).
+
 
 I think this is because ownership is extremely clarifying, and really improves
 local reasoning. If you look at any function that uses normal Rust references,
@@ -794,14 +840,33 @@ alive once the function returns, and which will not. For example, if you use a
 closure, you can tell immediately whether it outlives the current function, and
 if it does, what objects that closure owns.
 
+Я думаю, что это потому, что владение крайне проясняет и действительно улучшает
+локальные рассуждения. Если вы смотрите на любую функцию, которая использует
+обычные ссылки Rust, то вы можете сказать, локально, какие части памяти (и ресурсы)
+всё ещё будут активны после завершения функции и какие нет. Например, если вы используете
+замыкание, вы можете тут же сказать, переживёт ли оно текущую функцию, и если да,
+то какими объектами это замыкание владеет.
+
+
 I also think that the concepts of ownership and lending map onto most
 real-world programming patterns very nicely. There are some things you can't
 do, but in most cases, slight tweaks to code structure will get things
 compiling. In exchange, both memory and resource leaks happen very
 infrequently, and code clarity is improved.
 
+Я также думаю, что концепции владения и одалживания очень хорошо ложатся
+на многие шаблоны реального программирования. Здесь есть некоторые вещи,
+которые вы не можете сделать, но в большинстве случаев небольшие изменения
+в структуре кода сделают вещи компилируемыми. В обмен на это и утечки памяти,
+и утечки ресурсов случаются крайне редко, и чистота кода улучшена.
+
+
 If this wasn't the case, I suspect even experienced Rust developers would reach
 for `Rc` a lot more often.
+
+Если даже случай не тот, я сомневаюсь, что даже опытные разработчики на Rust
+будут пользоваться `Rc` намного чаще.
+
 
 All of that said, there are still occasional cases where reference counting, or
 even garbage collection, is the right approach. Rust's "smart pointer" system
@@ -810,7 +875,17 @@ borrowing system, and destructors get run when the reference count is
 decremented down to 0 (with the obvious cost in local reasoning and runtime
 performance).
 
+После всего сказанного, всё ещё есть редкие случаи, когда подсчёт ссылок или
+даже сборка мусора являются правильным подходом. “Умные указатели” в Rust
+позволяют `Rc` указателям прозрачно работать внутри той же системы владения
+и заимствования, и деструкторы отрабатывают, когда счётчик ссылок уменьшается
+до 0 (с очевидной ценой локального понимания и времени исполнения).
+
+
 ## Facilities in Other Languages
+
+## Средства в других языках
+
 
 Garbage collected languages often have facilities that can help programmers
 deal with the problem of manual resource management. In most modern languages,
@@ -818,11 +893,26 @@ you don't call close explicitly, but you do need to opt into language
 constructs that tie the resource to a lexical scope and release it when you're
 done.
 
+Языки со сборкой мусора часто имеют возможности, которые могут помочь программистам
+работать с задачами ручного управления памятью. В большинстве современных языков
+вы не вызываете close явно, но вам нужно выбрать языковые конструкции, которые
+связывают ресурсы с лексической областью видимости и освобождают их, когда вы
+всё.
+
+
 Let's look at a few examples, and then I'll talk about the disadvantages of
 these approaches.
 
+Давайте посмотрим на несколько примеров и тогда я скажу про недостатки этих
+подходов.
+
+
 In Ruby, you can use a block to indicate that you are going to use the resource
 within a given scope. Once the block returns, the resource gets cleaned up.
+
+В Ruby вы можете использовать блок для индикации того, что вы начитаете использовать
+ресурс в заданной области видимости. Как только блок завершается, то ресурс очищается.
+
 
 ```ruby
 File.open("/etc/passwd") do |file|  
@@ -830,13 +920,19 @@ File.open("/etc/passwd") do |file|
 end  
 ```
 
+
 In Python, a special `with` language keyword creates a protocol for acquiring a
 resource, and then releasing it once the block has completed:
+
+В Python специальное ключевое слово `with` создаёт протокол для приобретения
+ресурса и освобождает его, как только блок завершается:
+
 
 ```python
 with open("/etc/passwd") as file:  
   # use the file
 ```
+
 
 Both the Ruby approach, which uses a general-purpose language construct, and
 the Python approach, which creates a new protocol, abstracts away the
@@ -844,8 +940,19 @@ resource-specific closing mechanism. The user never has to know what closing
 looks like, but they must use a special abstraction to ensure that the closing
 occurs.
 
+И подход Ruby, который использует конструкции языка для общих целей, и подход
+Python, который создаёт новый протокол, абстрагируются от ресурсо-специфичного
+механизма закрытия. Пользователю никогда не нужно знать, на что похоже
+закрытие, но он должен использовать специальную абстракцию, чтобы обеспечить,
+что закрытие произойдёт.
+
+
 In Go, a `defer` keyword allows a programmer to provide cleanup logic next to
 the original creation of the object that manages the resource:
+
+В Go ключевое слово `defer` позволяет программисту привести логику очистки
+около оригинального создания объекта, который управляет ресурсом:
+
 
 ```go
 file, error := os.Open("/etc/passwd")  
@@ -857,72 +964,185 @@ defer file.Close()
 // use the file
 ```
 
+```go
+file, error := os.Open("/etc/passwd")  
+if err != nil {  
+    return;
+}
+defer file.Close()
+
+// используем файл
+```
+
+
 This has advantages over `try/catch/finally`, because it keeps the cleanup logic next 
 to the code that acquired the resource, but it does not abstract away the closing logic.
+
+Это имеет преимущества перед `try/catch/finally`, поскольку это сохраняет логику
+очистки рядом с кодом, который получает ресурс, но это не абстрагирует от логики
+закрытия.
+
 
 All of these approaches have a number of problems. Again, I urge you to
 disengage the “blub” center of your brain, which will probably be telling you
 that these problems “don’t end up mattering in practice”.
 
+Все эти подходы имеют ряд проблем. Опять же, я побуждаю вас освободиться от
+навязчивого центра в вашем мозге, который, вероятно, будет говорить вам,
+что эти проблемы “не так важны на практике”.
+
+
 * It is impossible to add resource releasing logic after the fact to existing
   constructs, because their clients will have used the normal object creation
   API. This makes it more difficult to abstract resources inside of higher level
   objects, because the resource management leaks out into the public API.
+
+* Невозможно добавить логику освобождения ресурса после факта существующих
+  конструкций, поскольку их клиенты будут использовать нормальный API для
+  создания объектов. Это делает много более сложным абстрагировать управление
+  ресурсами в объекты высокого уровня, поскольку управление ресурсами
+  протекает в публичный API.
+
+
 * The block-based approaches (Ruby and Python, but not Go) introduce rightward
   drift. Every time you want to work with a resource, you are forced to create
   a new scope. This is fairly annoying in Ruby (which has very good blocks) and
   Python (which uses a language-level construct), and a serious problem in
   JavaScript, where introducing a new scope prevents you from returning and
   breaking from surrounding loops.
+
+* Подход с блоками (как в Ruby и Python, но не в Go) вносит правый дрейф.
+  Каждый раз, когда вы хотите поработать с ресурсом, вы вынуждены создавать
+  новую область видимости. Это довольно раздражает в Ruby (который имеет очень
+  хорошие блоки) и в Python (который использует конструкцию уровня языка), и это
+  серьёзная проблема в JavaScript, в котором введение новой области видимости
+  предотвращает вам доступ к возврату и выходу из обрамляющих циклов.
+
+
 * These approaches (including Go’s defer) require you to use the resource
   within a given lexical scope. This forces awkward (or impossible) styles of
   programming when you want to pass the resource around to multiple functions. In
   effect, it is forcing a scope-based ownership system on languages in which that
   model is not idiomatic for object management.
+
+* Эти подходы (включая defer в Go) требуют от вас использовать ресурс
+  в заданной области видимости. Это форсирует неловкие (или невозможные) стили
+  программирования, когда вы хотите передать ресурс в несколько функций. В результате,
+  это форсирует основанную на областях видимости систему владения в языках, для
+  которых эта модель управления ресурсами не является идиоматичной.
+
+
   * Once you start calling other functions with the resource, it is fairly
     trivial to accidentally create “use-after-free” bugs, where a function
     hangs onto the resource (in a closure, say) and then tries to use it after the
     original function closed the resource.
 
+  * Как только вы начинаете вызывать другие функции с ресурсом, становится
+    довольно тривиально случайно создать баги “использования после освобождения”,
+    где функция подвешивается на ресурс (в замыкании, скажем) и пытается использовать
+    его после того, как оригинальная функция закрыла ресурс.
+
+
 Automatic resource management in Rust alleviates all of these problems:
+
+Автоматическое управление ресурсами в Rust облегчает все эти проблемы:
+
 
 * Resource-managing objects can define a destructor, which abstracts away the
   releasing logic. Creating an object in the normal way will cause the
-destructor to be invoked at the right time. An object can add a destructor
-after the fact, without having to modify client code.
+  destructor to be invoked at the right time. An object can add a destructor
+  after the fact, without having to modify client code.
+
+* Объекты управления ресурсами могут определить деструктор, который абстрагирует
+  логику освобождения. Создание объекта обычным путём приведёт к тому, что
+  деструктор будет вызван в правильное время. Объект может добавить деструктор
+  после факта, без необходимости модифицировать клиентский код.
+
+
   * Note that destructors are not like finalizers in languages with GCs. They
     run predictably, exactly when the object is no longer being used, and do
-not introduce runtime costs beyond the cost of running the destructor.
+    not introduce runtime costs beyond the cost of running the destructor.
+
+  * Заметьте, что деструкторы не похожи на финализаторы в языках со сборкой
+    мусора. Они отрабатывают предсказуемо, в точности тогда, когда объект больше
+    не используется, и не привносят дополнительных расходов на время выполнения
+    за исключением времени на отработку самого деструктора.
+
+
 * Because automatic resource management works the same way as automatic memory
   management, no indentation is required. This eliminates annoyance, and also
-preserves the semantics of the surrounding code.
+  preserves the semantics of the surrounding code.
+
+* Поскольку автоматическое управление ресурсами работает тем же путём, что и
+  автоматическое управление памятью, нет необходимости в отступах. Это
+  ликвидирует раздражение и также защищает семантику обрамляющего кода.
+
+
 * In Rust, you can pass around the resource the same way you would pass around
   any other kind of object. If you transfer ownership to a new scope, the
-resource will be closed when the new scope finishes. Otherwise, the borrowing
-system will guarantee that “use-after-free” is impossible, just as it is for
-memory.
+  resource will be closed when the new scope finishes. Otherwise, the borrowing
+  system will guarantee that “use-after-free” is impossible, just as it is for
+  memory.
+
+* В Rust вы можете кидать ресурс тем же способом, каким бы вы кидали любой
+  другой тип объектов. Если вы передаёте владение в новую область видимости,
+  ресурс будет закрыт когда новая область видимости завершится. С другой стороны,
+  система заимствования гарантирует, что баги “использования после освобождения”
+  невозможны, так же, как и для памяти.
+
 
 In short, there are real benefits to using the same system for memory and
 resource management.
+
+Короче, это и есть реальные выгоды от использования одной и той же системы
+для управления памятью и ресурсами.
+
 
 I won’t claim that the Rust ownership system is as mindless to use as garbage
 collection. That said, Rust has done a lot of very smart things to recoup a lot
 of the costs and even improve on the ergonomics of garbage collected languages
 in some cases, as we have seen.
 
+Я не утверждаю, что система владения в Rust настолько же бездумна, как сборка
+мусора. Скажем, Rust имеет сделанными много очень умных вещей, чтобы
+возместить много стоимости и даже улучшить удобство языков со сборкой мусора
+в некоторых случаях, как мы видели.
+
+
 In exchange, you get an extremely fast language that lets you control memory
 directly with an absolute guarantee of safety.
+
+В общем, вы получается крайне быстрый язык который позволяет вам управлять
+памятью прямо с абсолютной гарантией безопасности.
+
 
 Because of that, it enables a whole generation of users of high-level languages
 to write low-level code, and that really excites me. The communities have a lot
 to learn from each other.
 
+Поэтому это включает целое поколение пользователей высокоуровневых языков
+в написание низкоуровневого кода, что действительно возбуждает меня. Сообщества
+имеют много чему поучиться у другого.
+
+
 Do you want to learn more about the performance of your Rails app? Sign up for
 a [free 30-day trial](https://www.skylight.io/) of Skylight. No credit card
 required.
 
-[^1]: When I say “never”, I mean very, very rarely. In garbage collected
+Вы хотите изучить больше про производительность вашего приложения на Rails?
+Подпишитесь на [бесплатный 30-дневный курс](https://www.skylight.io/) Skylight.
+Кредитка не нужна.
+
+
+[^0]: When I say “never”, I mean very, very rarely. In garbage collected
   languages, you sometimes end up directly managing memory, and in Rust, you
-occasionally end up directly managing resources. In both cases, the dominant
-programming model is that the language manages resources for you, and that’s
-what’s important.
+  occasionally end up directly managing resources. In both cases, the dominant
+  programming model is that the language manages resources for you, and that’s
+  what’s important.
+
+[^1]: Когда я говорю “никогда”, я имею ввиду очень, очень редко. В языках
+  со сборкой мусора вы иногда спускаетесь до прямого управления памятью, в Rust
+  вы порой спускаетесь до прямого управления ресурсами. В обоих случаях,
+  доминирующая модель программирования это то, что язык управляет ресурсами для
+  вас, и вот это и важно.
+
